@@ -1,0 +1,4 @@
+main: de.linzn.systemChain.SystemChainPlugin
+name: system-chain
+version: ${project.version}
+depend: []
