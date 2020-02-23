@@ -14,29 +14,35 @@ package de.linzn.systemChain;
 
 import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
 import de.azcore.azcoreRuntime.modules.pluginModule.AZPlugin;
-import de.linzn.systemChain.runnables.GitPushHTW;
-import de.linzn.systemChain.runnables.NetworkScheduler;
-import de.linzn.systemChain.runnables.SystemUpdateScheduler;
-import de.linzn.systemChain.runnables.TemperatureScheduler;
+import de.linzn.systemChain.callbacks.GitPushHTW;
+import de.linzn.systemChain.callbacks.NetworkScheduler;
+import de.linzn.systemChain.callbacks.SystemUpdateScheduler;
+import de.linzn.systemChain.callbacks.TemperatureScheduler;
 
 public class SystemChainPlugin extends AZPlugin {
 
     public static SystemChainPlugin systemChainPlugin;
 
-
-    public SystemChainPlugin() {
-        systemChainPlugin = this;
-    }
+    private TemperatureScheduler temperatureScheduler;
+    private NetworkScheduler networkScheduler;
+    private SystemUpdateScheduler systemUpdateScheduler;
+    private GitPushHTW gitPushHTW;
 
     @Override
     public void onEnable() {
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new TemperatureScheduler(), this);
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new NetworkScheduler(), this);
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new SystemUpdateScheduler(), this);
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new GitPushHTW(), this);
+        systemChainPlugin = this;
+        temperatureScheduler = new TemperatureScheduler();
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(temperatureScheduler, this);
+        networkScheduler = new NetworkScheduler();
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(networkScheduler, this);
+        systemUpdateScheduler = new SystemUpdateScheduler();
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(systemUpdateScheduler, this);
+        gitPushHTW = new GitPushHTW();
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(gitPushHTW, this);
     }
 
     @Override
     public void onDisable() {
+        AZCoreRuntimeApp.getInstance().getCallBackService().unregisterCallbackListeners(this);
     }
 }

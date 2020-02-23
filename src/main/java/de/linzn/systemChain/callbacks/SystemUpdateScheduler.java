@@ -9,35 +9,47 @@
  *
  */
 
-package de.linzn.systemChain.runnables;
+package de.linzn.systemChain.callbacks;
 
 
 import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
 import de.azcore.azcoreRuntime.AppLogger;
-import de.azcore.azcoreRuntime.modules.databaseModule.DataContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
 import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
 import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
-import org.json.JSONArray;
+import de.linzn.simplyConfiguration.FileConfiguration;
+import de.linzn.simplyConfiguration.provider.YamlConfiguration;
+import de.linzn.systemChain.SystemChainPlugin;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.util.HashMap;
 
 
 public class SystemUpdateScheduler extends AbstractCallback {
+    private FileConfiguration fileConfiguration;
+
+    public SystemUpdateScheduler() {
+        fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "systemUpdateScheduler.yml"));
+        fileConfiguration.get("command", "test123");
+        fileConfiguration.save();
+    }
 
 
     @Override
     public void operation() {
-        DataContainer dataContainer = AZCoreRuntimeApp.getInstance().getDatabaseModule().getData("shell_command_upgrade_linux");
-        JSONArray jsonArray = dataContainer.getJSON().getJSONArray("host_names");
-        String command = "apt-get update && apt-get -y -o DPkg::options::=--force-confdef -o DPkg::options::=--force-confold dist-upgrade && apt-get -y autoremove";
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject object = jsonArray.getJSONObject(i);
-            String hostname = object.getString("host_name");
-            int port = object.getInt("port");
-            AppLogger.logger("Update " + hostname + ":" + port, true, false);
+        HashMap<String, Object> systems = (HashMap<String, Object>) fileConfiguration.get("systems");
+
+        String command = fileConfiguration.getString("command");
+
+        for (String key : systems.keySet()) {
+
+            String hostname = fileConfiguration.getString("systems." + key + ".hostname");
+            int port = fileConfiguration.getInt("systems." + key + ".port");
+            AppLogger.logger("Update " + hostname + ":" + port, true);
             TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("useOutput", false);
@@ -60,7 +72,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
         JSONObject jsonObject = (JSONObject) object;
         int exitCode = jsonObject.getInt("exitcode");
         JSONObject sshObject = jsonObject.getJSONObject("requestData").getJSONObject("ssh");
-        AppLogger.logger("Finish update " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " with exit " + exitCode, true, false);
+        AppLogger.logger("Finish update " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " with exit " + exitCode, true);
 
         if (exitCode != 0) {
             String message = "Es ist ein Fehler (Code: " + exitCode + ") bei Upgrade von " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " aufgetreten!";
@@ -71,6 +83,6 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
     @Override
     public CallbackTime getTime() {
-        return new CallbackTime(0, 2, 0, true);
+        return new CallbackTime(0, 3, 30, true);
     }
 }

@@ -9,36 +9,50 @@
  *
  */
 
-package de.linzn.systemChain.runnables;
+package de.linzn.systemChain.callbacks;
 
 
 import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
-import de.azcore.azcoreRuntime.modules.databaseModule.DataContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
 import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
 import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
+import de.linzn.simplyConfiguration.FileConfiguration;
+import de.linzn.simplyConfiguration.provider.YamlConfiguration;
+import de.linzn.systemChain.SystemChainPlugin;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class TemperatureScheduler extends AbstractCallback {
 
+    private FileConfiguration fileConfiguration;
     private int[] heat = {70, 80, 90};
     private int last = 0;
 
 
+    public TemperatureScheduler() {
+        fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "temperatureScheduler.yml"));
+        fileConfiguration.get("hostname", "test");
+        fileConfiguration.get("username", "test");
+        fileConfiguration.get("port", 22);
+        fileConfiguration.get("command", "ssh test");
+        fileConfiguration.save();
+    }
+
+
     @Override
     public void operation() {
-        DataContainer dataContainer = AZCoreRuntimeApp.getInstance().getDatabaseModule().getData("shell_command_temperature");
-        String command = dataContainer.getJSON().getString("command");
-        String username = dataContainer.getJSON().getString("user");
-        String hostname = dataContainer.getJSON().getString("host");
-        int port = dataContainer.getJSON().getInt("port");
+        String command = fileConfiguration.getString("command");
+        String username = fileConfiguration.getString("username");
+        String hostname = fileConfiguration.getString("hostname");
+        int port = fileConfiguration.getInt("port");
+
         TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("useOutput", true);
