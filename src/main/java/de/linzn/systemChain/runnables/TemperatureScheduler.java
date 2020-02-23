@@ -33,7 +33,7 @@ public class TemperatureScheduler extends AbstractCallback {
 
 
     @Override
-    public void methodToCall() {
+    public void operation() {
         DataContainer dataContainer = AZCoreRuntimeApp.getInstance().getDatabaseModule().getData("shell_command_temperature");
         String command = dataContainer.getJSON().getString("command");
         String username = dataContainer.getJSON().getString("user");

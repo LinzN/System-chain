@@ -12,29 +12,32 @@
 package de.linzn.systemChain.runnables;
 
 
-import de.linzn.evy.EvyApp;
-import de.linzn.evy.api.OperationRegister;
-import de.linzn.evy.internal.containers.*;
-import de.linzn.evy.module.notification.NotificationContainer;
-import de.linzn.evy.module.notification.NotificationPriority;
-import de.linzn.evy.plugin.runnables.data.Runner;
+import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
+import de.azcore.azcoreRuntime.AppLogger;
+import de.azcore.azcoreRuntime.modules.databaseModule.DataContainer;
+import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
+import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
+import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
+import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 
-public class SystemUpdateScheduler extends Runner {
+public class SystemUpdateScheduler extends AbstractCallback {
 
 
     @Override
-    public void schedule() {
-        DataContainer dataContainer = EvyApp.getInstance().getDatabaseModule().getData("shell_command_upgrade_linux");
+    public void operation() {
+        DataContainer dataContainer = AZCoreRuntimeApp.getInstance().getDatabaseModule().getData("shell_command_upgrade_linux");
         JSONArray jsonArray = dataContainer.getJSON().getJSONArray("host_names");
         String command = "apt-get update && apt-get -y -o DPkg::options::=--force-confdef -o DPkg::options::=--force-confold dist-upgrade && apt-get -y autoremove";
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject object = jsonArray.getJSONObject(i);
             String hostname = object.getString("host_name");
             int port = object.getInt("port");
-            EvyApp.logger("Update " + hostname + ":" + port, true, false);
+            AppLogger.logger("Update " + hostname + ":" + port, true, false);
             TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("useOutput", false);
@@ -48,27 +51,26 @@ public class SystemUpdateScheduler extends Runner {
             jsonObject.put("command", commandObject);
             commandObject.put("isScript", false);
             commandObject.put("script", command);
-            TaskContainer taskContainer = new TaskContainer(taskOperation, jsonObject);
-            addOperation(taskContainer);
+            addOperationData(taskOperation, jsonObject);
         }
     }
 
     @Override
-    public void loopback(JSONObject jsonObject) {
+    public void callback(Object object) {
+        JSONObject jsonObject = (JSONObject) object;
         int exitCode = jsonObject.getInt("exitcode");
         JSONObject sshObject = jsonObject.getJSONObject("requestData").getJSONObject("ssh");
-        EvyApp.logger("Finish update " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " with exit " + exitCode, true, false);
+        AppLogger.logger("Finish update " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " with exit " + exitCode, true, false);
 
         if (exitCode != 0) {
             String message = "Es ist ein Fehler (Code: " + exitCode + ") bei Upgrade von " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " aufgetreten!";
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
-            EvyApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
+            AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
     }
 
     @Override
-    public TimeData runnableTimer() {
-        return new TimedTimeData(0, 2, 0);
+    public CallbackTime getTime() {
+        return new CallbackTime(0, 2, 0, true);
     }
-
 }

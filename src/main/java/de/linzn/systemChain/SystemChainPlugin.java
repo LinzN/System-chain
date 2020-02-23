@@ -14,21 +14,26 @@ package de.linzn.systemChain;
 
 import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
 import de.azcore.azcoreRuntime.modules.pluginModule.AZPlugin;
+import de.linzn.systemChain.runnables.GitPushHTW;
+import de.linzn.systemChain.runnables.NetworkScheduler;
+import de.linzn.systemChain.runnables.SystemUpdateScheduler;
 import de.linzn.systemChain.runnables.TemperatureScheduler;
 
 public class SystemChainPlugin extends AZPlugin {
 
-    public static SystemChainPlugin runnablePlugin;
+    public static SystemChainPlugin systemChainPlugin;
 
 
     public SystemChainPlugin() {
-        runnablePlugin = this;
+        systemChainPlugin = this;
     }
 
     @Override
     public void onEnable() {
-
         AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new TemperatureScheduler(), this);
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new NetworkScheduler(), this);
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new SystemUpdateScheduler(), this);
+        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(new GitPushHTW(), this);
     }
 
     @Override

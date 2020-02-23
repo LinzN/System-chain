@@ -12,19 +12,18 @@
 package de.linzn.systemChain.runnables;
 
 
-import de.linzn.evy.EvyApp;
-import de.linzn.evy.api.OperationRegister;
-import de.linzn.evy.internal.containers.DataContainer;
-import de.linzn.evy.internal.containers.TaskContainer;
-import de.linzn.evy.internal.containers.TaskOperation;
-import de.linzn.evy.internal.containers.TimeData;
-import de.linzn.evy.plugin.runnables.data.Runner;
+import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
+import de.azcore.azcoreRuntime.modules.databaseModule.DataContainer;
+import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
+import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
 
-public class NetworkScheduler extends Runner {
+public class NetworkScheduler extends AbstractCallback {
 
     private static float lastPing = -1;
 
@@ -33,8 +32,8 @@ public class NetworkScheduler extends Runner {
     }
 
     @Override
-    public void schedule() {
-        DataContainer dataContainer = EvyApp.getInstance().getDatabaseModule().getData("shell_command_network");
+    public void operation() {
+        DataContainer dataContainer = AZCoreRuntimeApp.getInstance().getDatabaseModule().getData("shell_command_network");
         String command = dataContainer.getJSON().getString("command");
         String username = dataContainer.getJSON().getString("user");
         String hostname = dataContainer.getJSON().getString("host");
@@ -53,12 +52,12 @@ public class NetworkScheduler extends Runner {
         jsonObject.put("command", commandObject);
         commandObject.put("isScript", false);
         commandObject.put("script", command);
-        TaskContainer taskContainer = new TaskContainer(taskOperation, jsonObject);
-        addOperation(taskContainer);
+        addOperationData(taskOperation, jsonObject);
     }
 
     @Override
-    public void loopback(JSONObject jsonObject) {
+    public void callback(Object object) {
+        JSONObject jsonObject = (JSONObject) object;
         JSONArray jsonArray = jsonObject.getJSONArray("output");
         if (jsonObject.getInt("exitcode") != 0) {
             lastPing = -1;
@@ -72,8 +71,8 @@ public class NetworkScheduler extends Runner {
     }
 
     @Override
-    public TimeData runnableTimer() {
-        return new TimeData(5, 10, TimeUnit.SECONDS);
+    public CallbackTime getTime() {
+        return new CallbackTime(5, 10, TimeUnit.SECONDS);
     }
 
     private float getFloat(String line) {

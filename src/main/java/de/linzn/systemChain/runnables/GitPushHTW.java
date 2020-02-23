@@ -12,19 +12,21 @@
 package de.linzn.systemChain.runnables;
 
 
-import de.linzn.evy.EvyApp;
-import de.linzn.evy.api.OperationRegister;
-import de.linzn.evy.internal.containers.*;
-import de.linzn.evy.module.notification.NotificationContainer;
-import de.linzn.evy.module.notification.NotificationPriority;
-import de.linzn.evy.plugin.runnables.data.Runner;
+import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
+import de.azcore.azcoreRuntime.modules.databaseModule.DataContainer;
+import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
+import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
+import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
+import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
 import org.json.JSONObject;
 
-public class GitPushHTW extends Runner {
+public class GitPushHTW extends AbstractCallback {
 
     @Override
-    public void schedule() {
-        DataContainer dataContainer = EvyApp.getInstance().getDatabaseModule().getData("shell_command_push_htw");
+    public void operation() {
+        DataContainer dataContainer = AZCoreRuntimeApp.getInstance().getDatabaseModule().getData("shell_command_push_htw");
         String command = dataContainer.getJSON().getString("htw_command");
         String username = dataContainer.getJSON().getString("htw_userName");
         String hostname = dataContainer.getJSON().getString("htw_hostName");
@@ -42,24 +44,24 @@ public class GitPushHTW extends Runner {
         jsonObject.put("command", commandObject);
         commandObject.put("isScript", false);
         commandObject.put("script", command);
-
-        TaskContainer taskContainer = new TaskContainer(taskOperation, jsonObject);
-        addOperation(taskContainer);
+        addOperationData(taskOperation, jsonObject);
     }
 
     @Override
-    public void loopback(JSONObject jsonObject) {
+    public void callback(Object object) {
+        JSONObject jsonObject = (JSONObject) object;
         int exitCode = jsonObject.getInt("exitcode");
         if (exitCode != 0) {
             String message = "Unerwarteter Fehler bei Task [HTW Push] mit code " + exitCode;
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
-            EvyApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
+            AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
     }
 
     @Override
-    public TimeData runnableTimer() {
-        return new TimedTimeData(0, 1, 0);
+    public CallbackTime getTime() {
+        return new CallbackTime(0, 1, 0, true);
     }
+
 
 }
