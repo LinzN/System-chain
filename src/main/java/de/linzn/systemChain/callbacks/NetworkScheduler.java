@@ -12,23 +12,25 @@
 package de.linzn.systemChain.callbacks;
 
 
+import de.azcore.azcoreRuntime.AppLogger;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
 import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
 import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
+import de.azcore.azcoreRuntime.utils.Color;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class NetworkScheduler extends AbstractCallback {
 
-    private FileConfiguration fileConfiguration;
     private static float lastPing = -1;
+    private FileConfiguration fileConfiguration;
 
     public NetworkScheduler() {
         fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "networkScheduler.yml"));
@@ -51,32 +53,34 @@ public class NetworkScheduler extends AbstractCallback {
         int port = fileConfiguration.getInt("port");
 
         TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("useOutput", true);
-        JSONObject sshObject = new JSONObject();
-        jsonObject.put("ssh", sshObject);
-        sshObject.put("useSSH", true);
-        sshObject.put("user", username);
-        sshObject.put("host", hostname);
-        sshObject.put("port", port);
-        JSONObject commandObject = new JSONObject();
-        jsonObject.put("command", commandObject);
-        commandObject.put("isScript", false);
-        commandObject.put("script", command);
-        addOperationData(taskOperation, jsonObject);
+        OperationSettings operationSettings = new OperationSettings();
+
+        operationSettings.addSetting("ssh.use", true);
+        operationSettings.addSetting("ssh.user", username);
+        operationSettings.addSetting("ssh.host", hostname);
+        operationSettings.addSetting("ssh.port", port);
+
+        operationSettings.addSetting("command.script", command);
+
+        operationSettings.addSetting("output.use", true);
+
+        addOperationData(taskOperation, operationSettings);
     }
 
     @Override
     public void callback(Object object) {
-        JSONObject jsonObject = (JSONObject) object;
-        JSONArray jsonArray = jsonObject.getJSONArray("output");
-        if (jsonObject.getInt("exitcode") != 0) {
+        OperationSettings operationSettings = (OperationSettings) object;
+
+        List<String> list = (List<String>) operationSettings.getSetting("output");
+
+        if (operationSettings.getIntSetting("exit") != 0) {
             lastPing = -1;
         } else {
-            String line = jsonArray.getString(0).substring(21).replace("ms", "");
+            String line = list.get(0).substring(21).replace("ms", "");
             String[] pingArray = line.split("/");
 
             lastPing = getFloat(pingArray[1]);
+            AppLogger.debug(Color.GREEN + "Network state " + lastPing + " ms");
         }
 
     }

@@ -19,11 +19,11 @@ import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
 import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
 import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.util.HashMap;
@@ -51,31 +51,30 @@ public class SystemUpdateScheduler extends AbstractCallback {
             int port = fileConfiguration.getInt("systems." + key + ".port");
             AppLogger.logger("Update " + hostname + ":" + port, true);
             TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("useOutput", false);
-            JSONObject sshObject = new JSONObject();
-            jsonObject.put("ssh", sshObject);
-            sshObject.put("useSSH", true);
-            sshObject.put("user", "root");
-            sshObject.put("host", hostname);
-            sshObject.put("port", port);
-            JSONObject commandObject = new JSONObject();
-            jsonObject.put("command", commandObject);
-            commandObject.put("isScript", false);
-            commandObject.put("script", command);
-            addOperationData(taskOperation, jsonObject);
+
+            OperationSettings operationSettings = new OperationSettings();
+
+            operationSettings.addSetting("ssh.use", true);
+            operationSettings.addSetting("ssh.user", "root");
+            operationSettings.addSetting("ssh.host", hostname);
+            operationSettings.addSetting("ssh.port", port);
+
+            operationSettings.addSetting("command.script", command);
+
+            operationSettings.addSetting("output.use", false);
+            addOperationData(taskOperation, operationSettings);
         }
     }
 
     @Override
     public void callback(Object object) {
-        JSONObject jsonObject = (JSONObject) object;
-        int exitCode = jsonObject.getInt("exitcode");
-        JSONObject sshObject = jsonObject.getJSONObject("requestData").getJSONObject("ssh");
-        AppLogger.logger("Finish update " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " with exit " + exitCode, true);
+        OperationSettings operationSettings = (OperationSettings) object;
+        int exitCode = operationSettings.getIntSetting("exit");
+        OperationSettings input = (OperationSettings) operationSettings.getSetting("input.settings");
+        AppLogger.logger("Finish update " + input.getStringSetting("ssh.host") + ":" + input.getIntSetting("ssh.port") + " with exit " + exitCode, true);
 
         if (exitCode != 0) {
-            String message = "Es ist ein Fehler (Code: " + exitCode + ") bei Upgrade von " + sshObject.getString("host") + ":" + sshObject.getInt("port") + " aufgetreten!";
+            String message = "Error (Code: " + exitCode + ") while upgrading machine " + input.getStringSetting("ssh.host") + ":" + input.getIntSetting("ssh.port") + "!";
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
             AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }

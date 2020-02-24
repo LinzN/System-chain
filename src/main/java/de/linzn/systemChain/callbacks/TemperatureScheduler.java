@@ -13,20 +13,22 @@ package de.linzn.systemChain.callbacks;
 
 
 import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
+import de.azcore.azcoreRuntime.AppLogger;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
 import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
 import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
+import de.azcore.azcoreRuntime.utils.Color;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class TemperatureScheduler extends AbstractCallback {
@@ -54,28 +56,27 @@ public class TemperatureScheduler extends AbstractCallback {
         int port = fileConfiguration.getInt("port");
 
         TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("useOutput", true);
-        JSONObject sshObject = new JSONObject();
-        jsonObject.put("ssh", sshObject);
-        sshObject.put("useSSH", true);
-        sshObject.put("user", username);
-        sshObject.put("host", hostname);
-        sshObject.put("port", port);
-        JSONObject commandObject = new JSONObject();
-        jsonObject.put("command", commandObject);
-        commandObject.put("isScript", false);
-        commandObject.put("script", command);
-        this.addOperationData(taskOperation, jsonObject);
+        OperationSettings operationSettings = new OperationSettings();
+
+        operationSettings.addSetting("ssh.use", true);
+        operationSettings.addSetting("ssh.user", username);
+        operationSettings.addSetting("ssh.host", hostname);
+        operationSettings.addSetting("ssh.port", port);
+
+        operationSettings.addSetting("command.script", command);
+
+        operationSettings.addSetting("output.use", true);
+
+        this.addOperationData(taskOperation, operationSettings);
     }
 
     @Override
     public void callback(Object object) {
-        JSONObject jsonObject = (JSONObject) object;
-        JSONArray jsonArray = jsonObject.getJSONArray("output");
+        OperationSettings operationSettings = (OperationSettings) object;
+        List<String> list = (List<String>) operationSettings.getSetting("output");
         ArrayList<Float> floatList = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            floatList.add(getFloat(jsonArray.getString(i)));
+        for (String s : list) {
+            floatList.add(getFloat(s));
         }
         double hotCore = -1;
         String notificationString = null;
@@ -116,6 +117,8 @@ public class TemperatureScheduler extends AbstractCallback {
             NotificationContainer notificationContainer = new NotificationContainer(notificationString, NotificationPriority.ASAP);
             AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
+
+        AppLogger.debug(Color.GREEN + "Core temperatures " + floatList.toString());
     }
 
     @Override

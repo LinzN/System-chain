@@ -18,11 +18,11 @@ import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
 import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
 import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import org.json.JSONObject;
 
 import java.io.File;
 
@@ -47,27 +47,26 @@ public class GitPushHTW extends AbstractCallback {
         int port = fileConfiguration.getInt("port");
 
         TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("useOutput", false);
-        JSONObject sshObject = new JSONObject();
-        jsonObject.put("ssh", sshObject);
-        sshObject.put("useSSH", true);
-        sshObject.put("user", username);
-        sshObject.put("host", hostname);
-        sshObject.put("port", port);
-        JSONObject commandObject = new JSONObject();
-        jsonObject.put("command", commandObject);
-        commandObject.put("isScript", false);
-        commandObject.put("script", command);
-        addOperationData(taskOperation, jsonObject);
+        OperationSettings operationSettings = new OperationSettings();
+
+        operationSettings.addSetting("ssh.use", true);
+        operationSettings.addSetting("ssh.user", username);
+        operationSettings.addSetting("ssh.host", hostname);
+        operationSettings.addSetting("ssh.port", port);
+
+        operationSettings.addSetting("command.script", command);
+
+        operationSettings.addSetting("output.use", false);
+        addOperationData(taskOperation, operationSettings);
     }
 
     @Override
     public void callback(Object object) {
-        JSONObject jsonObject = (JSONObject) object;
-        int exitCode = jsonObject.getInt("exitcode");
+        OperationSettings operationSettings = (OperationSettings) object;
+
+        int exitCode = operationSettings.getIntSetting("exit");
         if (exitCode != 0) {
-            String message = "Unerwarteter Fehler bei Task [HTW Push] mit code " + exitCode;
+            String message = "Git push to HTW error with code " + exitCode;
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
             AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
