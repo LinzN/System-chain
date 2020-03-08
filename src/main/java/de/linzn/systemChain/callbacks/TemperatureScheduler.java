@@ -18,9 +18,8 @@ import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
-import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationOutput;
+import de.azcore.azcoreRuntime.taskManagment.operations.defaultOperations.ShellOperation;
 import de.azcore.azcoreRuntime.utils.Color;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
@@ -55,25 +54,22 @@ public class TemperatureScheduler extends AbstractCallback {
         String hostname = fileConfiguration.getString("hostname");
         int port = fileConfiguration.getInt("port");
 
-        TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
-        OperationSettings operationSettings = new OperationSettings();
+        ShellOperation shellOperation = new ShellOperation();
 
-        operationSettings.addSetting("ssh.use", true);
-        operationSettings.addSetting("ssh.user", username);
-        operationSettings.addSetting("ssh.host", hostname);
-        operationSettings.addSetting("ssh.port", port);
+        shellOperation.setUseSSH(true);
+        shellOperation.setSshUser(username);
+        shellOperation.setSshHost(hostname);
+        shellOperation.setSshPort(port);
 
-        operationSettings.addSetting("command.script", command);
+        shellOperation.setScriptCommand(command);
+        shellOperation.setUseOutput(true);
 
-        operationSettings.addSetting("output.use", true);
-
-        this.addOperationData(taskOperation, operationSettings);
+        addOperationData(shellOperation);
     }
 
     @Override
-    public void callback(Object object) {
-        OperationSettings operationSettings = (OperationSettings) object;
-        List<String> list = (List<String>) operationSettings.getSetting("output");
+    public void callback(OperationOutput operationOutput) {
+        List<String> list = (List<String>) operationOutput.getData();
         ArrayList<Float> floatList = new ArrayList<>();
         for (String s : list) {
             floatList.add(getFloat(s));

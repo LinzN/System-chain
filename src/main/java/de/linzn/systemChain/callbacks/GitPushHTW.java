@@ -17,9 +17,8 @@ import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
-import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationOutput;
+import de.azcore.azcoreRuntime.taskManagment.operations.defaultOperations.ShellOperation;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
@@ -46,25 +45,23 @@ public class GitPushHTW extends AbstractCallback {
         String hostname = fileConfiguration.getString("hostname");
         int port = fileConfiguration.getInt("port");
 
-        TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
-        OperationSettings operationSettings = new OperationSettings();
+        ShellOperation shellOperation = new ShellOperation();
 
-        operationSettings.addSetting("ssh.use", true);
-        operationSettings.addSetting("ssh.user", username);
-        operationSettings.addSetting("ssh.host", hostname);
-        operationSettings.addSetting("ssh.port", port);
+        shellOperation.setUseSSH(true);
+        shellOperation.setSshUser(username);
+        shellOperation.setSshHost(hostname);
+        shellOperation.setSshPort(port);
 
-        operationSettings.addSetting("command.script", command);
+        shellOperation.setScriptCommand(command);
+        shellOperation.setUseOutput(false);
 
-        operationSettings.addSetting("output.use", false);
-        addOperationData(taskOperation, operationSettings);
+        addOperationData(shellOperation);
     }
 
     @Override
-    public void callback(Object object) {
-        OperationSettings operationSettings = (OperationSettings) object;
+    public void callback(OperationOutput operationOutput) {
 
-        int exitCode = operationSettings.getIntSetting("exit");
+        int exitCode = operationOutput.getExit();
         if (exitCode != 0) {
             String message = "Git push to HTW error with code " + exitCode;
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);

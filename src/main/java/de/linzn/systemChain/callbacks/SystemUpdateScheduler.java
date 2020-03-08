@@ -18,9 +18,8 @@ import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
 import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
 import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
 import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationRegister;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationSettings;
-import de.azcore.azcoreRuntime.taskManagment.operations.TaskOperation;
+import de.azcore.azcoreRuntime.taskManagment.operations.OperationOutput;
+import de.azcore.azcoreRuntime.taskManagment.operations.defaultOperations.ShellOperation;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
@@ -50,31 +49,28 @@ public class SystemUpdateScheduler extends AbstractCallback {
             String hostname = fileConfiguration.getString("systems." + key + ".hostname");
             int port = fileConfiguration.getInt("systems." + key + ".port");
             AppLogger.logger("Update " + hostname + ":" + port, true);
-            TaskOperation taskOperation = OperationRegister.getOperation("run_linux_shell");
+            ShellOperation shellOperation = new ShellOperation();
 
-            OperationSettings operationSettings = new OperationSettings();
+            shellOperation.setUseSSH(true);
+            shellOperation.setSshUser("root");
+            shellOperation.setSshHost(hostname);
+            shellOperation.setSshPort(port);
 
-            operationSettings.addSetting("ssh.use", true);
-            operationSettings.addSetting("ssh.user", "root");
-            operationSettings.addSetting("ssh.host", hostname);
-            operationSettings.addSetting("ssh.port", port);
+            shellOperation.setScriptCommand(command);
+            shellOperation.setUseOutput(false);
 
-            operationSettings.addSetting("command.script", command);
-
-            operationSettings.addSetting("output.use", false);
-            addOperationData(taskOperation, operationSettings);
+            addOperationData(shellOperation);
         }
     }
 
     @Override
-    public void callback(Object object) {
-        OperationSettings operationSettings = (OperationSettings) object;
-        int exitCode = operationSettings.getIntSetting("exit");
-        OperationSettings input = (OperationSettings) operationSettings.getSetting("input.settings");
-        AppLogger.logger("Finish update " + input.getStringSetting("ssh.host") + ":" + input.getIntSetting("ssh.port") + " with exit " + exitCode, true);
+    public void callback(OperationOutput operationOutput) {
+        int exitCode = operationOutput.getExit();
+        ShellOperation abstractOperation = (ShellOperation) operationOutput.getAbstractOperation();
+        AppLogger.logger("Finish update " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with exit " + exitCode, true);
 
         if (exitCode != 0) {
-            String message = "Error (Code: " + exitCode + ") while upgrading machine " + input.getStringSetting("ssh.host") + ":" + input.getIntSetting("ssh.port") + "!";
+            String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
             AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
