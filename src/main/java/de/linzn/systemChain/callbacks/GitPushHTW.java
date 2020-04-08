@@ -12,16 +12,16 @@
 package de.linzn.systemChain.callbacks;
 
 
-import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
-import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
-import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
-import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
-import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationOutput;
-import de.azcore.azcoreRuntime.taskManagment.operations.defaultOperations.ShellOperation;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
+import de.stem.stemSystem.STEMSystemApp;
+import de.stem.stemSystem.modules.notificationModule.NotificationContainer;
+import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
+import de.stem.stemSystem.taskManagment.AbstractCallback;
+import de.stem.stemSystem.taskManagment.CallbackTime;
+import de.stem.stemSystem.taskManagment.operations.OperationOutput;
+import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
 
 import java.io.File;
 
@@ -65,7 +65,7 @@ public class GitPushHTW extends AbstractCallback {
         if (exitCode != 0) {
             String message = "Git push to HTW error with code " + exitCode;
             NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
-            AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
+            STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
     }
 

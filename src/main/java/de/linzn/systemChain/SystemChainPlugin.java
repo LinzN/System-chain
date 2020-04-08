@@ -12,14 +12,15 @@
 package de.linzn.systemChain;
 
 
-import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
-import de.azcore.azcoreRuntime.modules.pluginModule.AZPlugin;
+
 import de.linzn.systemChain.callbacks.GitPushHTW;
 import de.linzn.systemChain.callbacks.NetworkScheduler;
 import de.linzn.systemChain.callbacks.SystemUpdateScheduler;
 import de.linzn.systemChain.callbacks.TemperatureScheduler;
+import de.stem.stemSystem.STEMSystemApp;
+import de.stem.stemSystem.modules.pluginModule.STEMPlugin;
 
-public class SystemChainPlugin extends AZPlugin {
+public class SystemChainPlugin extends STEMPlugin {
 
     public static SystemChainPlugin systemChainPlugin;
 
@@ -32,17 +33,17 @@ public class SystemChainPlugin extends AZPlugin {
     public void onEnable() {
         systemChainPlugin = this;
         temperatureScheduler = new TemperatureScheduler();
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(temperatureScheduler, this);
+        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(temperatureScheduler, this);
         networkScheduler = new NetworkScheduler();
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(networkScheduler, this);
+        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(networkScheduler, this);
         systemUpdateScheduler = new SystemUpdateScheduler();
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(systemUpdateScheduler, this);
+        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(systemUpdateScheduler, this);
         gitPushHTW = new GitPushHTW();
-        AZCoreRuntimeApp.getInstance().getCallBackService().registerCallbackListener(gitPushHTW, this);
+        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(gitPushHTW, this);
     }
 
     @Override
     public void onDisable() {
-        AZCoreRuntimeApp.getInstance().getCallBackService().unregisterCallbackListeners(this);
+        STEMSystemApp.getInstance().getCallBackService().unregisterCallbackListeners(this);
     }
 }

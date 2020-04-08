@@ -12,18 +12,18 @@
 package de.linzn.systemChain.callbacks;
 
 
-import de.azcore.azcoreRuntime.AZCoreRuntimeApp;
-import de.azcore.azcoreRuntime.AppLogger;
-import de.azcore.azcoreRuntime.modules.notificationModule.NotificationContainer;
-import de.azcore.azcoreRuntime.modules.notificationModule.NotificationPriority;
-import de.azcore.azcoreRuntime.taskManagment.AbstractCallback;
-import de.azcore.azcoreRuntime.taskManagment.CallbackTime;
-import de.azcore.azcoreRuntime.taskManagment.operations.OperationOutput;
-import de.azcore.azcoreRuntime.taskManagment.operations.defaultOperations.ShellOperation;
-import de.azcore.azcoreRuntime.utils.Color;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
+import de.stem.stemSystem.AppLogger;
+import de.stem.stemSystem.STEMSystemApp;
+import de.stem.stemSystem.modules.notificationModule.NotificationContainer;
+import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
+import de.stem.stemSystem.taskManagment.AbstractCallback;
+import de.stem.stemSystem.taskManagment.CallbackTime;
+import de.stem.stemSystem.taskManagment.operations.OperationOutput;
+import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
+import de.stem.stemSystem.utils.Color;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -111,7 +111,7 @@ public class TemperatureScheduler extends AbstractCallback {
         }
         if (notificationString != null) {
             NotificationContainer notificationContainer = new NotificationContainer(notificationString, NotificationPriority.ASAP);
-            AZCoreRuntimeApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
+            STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
 
         AppLogger.debug(Color.GREEN + "Core temperatures " + floatList.toString());
