@@ -71,7 +71,7 @@ public class GitPushHTW extends AbstractCallback {
 
     @Override
     public CallbackTime getTime() {
-        return new CallbackTime(0, 1, 30, true);
+        return new CallbackTime(0, 1, 50, true);
     }
 
 

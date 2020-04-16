@@ -77,6 +77,6 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
     @Override
     public CallbackTime getTime() {
-        return new CallbackTime(0, 3, 30, true);
+        return new CallbackTime(0, 2, 30, true);
     }
 }
