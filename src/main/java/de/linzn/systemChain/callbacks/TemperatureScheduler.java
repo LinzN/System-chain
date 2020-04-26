@@ -35,6 +35,7 @@ public class TemperatureScheduler extends AbstractCallback {
     private FileConfiguration fileConfiguration;
     private int[] heat = {70, 80, 90};
     private int last = 0;
+    private static double hottestCore = 0;
 
 
     public TemperatureScheduler() {
@@ -44,6 +45,10 @@ public class TemperatureScheduler extends AbstractCallback {
         fileConfiguration.get("port", 22);
         fileConfiguration.get("command", "ssh test");
         fileConfiguration.save();
+    }
+
+    public static double getHottestCore() {
+        return hottestCore;
     }
 
 
@@ -82,6 +87,7 @@ public class TemperatureScheduler extends AbstractCallback {
                 hotCore = value;
             }
         }
+        hottestCore = hotCore;
         if (hotCore >= heat[0]) {
 
             if (hotCore >= heat[1]) {
