@@ -13,7 +13,6 @@ package de.linzn.systemChain;
 
 
 
-import de.linzn.systemChain.callbacks.GitPushHTW;
 import de.linzn.systemChain.callbacks.NetworkScheduler;
 import de.linzn.systemChain.callbacks.SystemUpdateScheduler;
 import de.linzn.systemChain.callbacks.TemperatureScheduler;
@@ -27,7 +26,6 @@ public class SystemChainPlugin extends STEMPlugin {
     private TemperatureScheduler temperatureScheduler;
     private NetworkScheduler networkScheduler;
     private SystemUpdateScheduler systemUpdateScheduler;
-    private GitPushHTW gitPushHTW;
 
     @Override
     public void onEnable() {
@@ -38,8 +36,6 @@ public class SystemChainPlugin extends STEMPlugin {
         STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(networkScheduler, this);
         systemUpdateScheduler = new SystemUpdateScheduler();
         STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(systemUpdateScheduler, this);
-        gitPushHTW = new GitPushHTW();
-        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(gitPushHTW, this);
     }
 
     @Override
