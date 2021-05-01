@@ -15,7 +15,7 @@ package de.linzn.systemChain.callbacks;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import de.stem.stemSystem.AppLogger;
+import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class NetworkScheduler extends AbstractCallback {
 
     private static float lastPing = -1;
-    private FileConfiguration fileConfiguration;
+    private final FileConfiguration fileConfiguration;
 
     public NetworkScheduler() {
         fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "networkScheduler.yml"));
@@ -75,7 +75,7 @@ public class NetworkScheduler extends AbstractCallback {
             String[] pingArray = line.split("/");
 
             lastPing = getFloat(pingArray[1]);
-            AppLogger.debug(Color.GREEN + "Network state " + lastPing + " ms");
+            STEMSystemApp.LOGGER.DEBUG(Color.GREEN + "Network state " + lastPing + " ms");
         }
 
     }

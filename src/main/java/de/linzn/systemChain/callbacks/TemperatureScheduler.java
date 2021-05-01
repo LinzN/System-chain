@@ -15,7 +15,6 @@ package de.linzn.systemChain.callbacks;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import de.stem.stemSystem.AppLogger;
 import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.modules.notificationModule.NotificationContainer;
 import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
@@ -23,7 +22,6 @@ import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
 import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
-import de.stem.stemSystem.utils.Color;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 public class TemperatureScheduler extends AbstractCallback {
 
-    private FileConfiguration fileConfiguration;
-    private int[] heat = {70, 80, 90};
+    private final FileConfiguration fileConfiguration;
+    private final int[] heat = {70, 80, 90};
     private int last = 0;
     private static double hottestCore = 0;
 
@@ -120,7 +118,7 @@ public class TemperatureScheduler extends AbstractCallback {
             STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
         }
 
-        AppLogger.debug(Color.GREEN + "Core temperatures " + floatList.toString());
+        STEMSystemApp.LOGGER.DEBUG("Core temperatures " + floatList.toString());
     }
 
     @Override

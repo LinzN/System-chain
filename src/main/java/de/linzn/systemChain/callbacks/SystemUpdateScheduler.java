@@ -14,7 +14,6 @@ package de.linzn.systemChain.callbacks;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
-import de.stem.stemSystem.AppLogger;
 import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.modules.notificationModule.NotificationContainer;
 import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
@@ -28,7 +27,7 @@ import java.util.HashMap;
 
 
 public class SystemUpdateScheduler extends AbstractCallback {
-    private FileConfiguration fileConfiguration;
+    private final FileConfiguration fileConfiguration;
 
     public SystemUpdateScheduler() {
         fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "systemUpdateScheduler.yml"));
@@ -47,7 +46,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
             String hostname = fileConfiguration.getString("systems." + key + ".hostname");
             int port = fileConfiguration.getInt("systems." + key + ".port");
-            AppLogger.logger("Update " + hostname + ":" + port, true);
+            STEMSystemApp.LOGGER.INFO("Update " + hostname + ":" + port);
             ShellOperation shellOperation = new ShellOperation();
 
             shellOperation.setUseSSH(true);
@@ -66,7 +65,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
     public void callback(OperationOutput operationOutput) {
         int exitCode = operationOutput.getExit();
         ShellOperation abstractOperation = (ShellOperation) operationOutput.getAbstractOperation();
-        AppLogger.logger("Finish update " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with exit " + exitCode, true);
+        STEMSystemApp.LOGGER.INFO("Finish update " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with exit " + exitCode);
 
         if (exitCode != 0) {
             String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
