@@ -20,7 +20,6 @@ import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
 import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
-import de.stem.stemSystem.utils.Color;
 
 import java.io.File;
 import java.util.List;
@@ -75,7 +74,7 @@ public class NetworkScheduler extends AbstractCallback {
             String[] pingArray = line.split("/");
 
             lastPing = getFloat(pingArray[1]);
-            STEMSystemApp.LOGGER.DEBUG(Color.GREEN + "Network state " + lastPing + " ms");
+            STEMSystemApp.LOGGER.DEBUG("Network state " + lastPing + " ms");
         }
 
     }
