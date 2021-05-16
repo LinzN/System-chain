@@ -66,10 +66,12 @@
 
                         <configuration>
                             <outputDirectory>target/export-lib</outputDirectory>
-                            <excludeGroupIds>de.linzn, de.stem, de.stem.plugins, org.yaml, org.json, org.eclipse,
+                            <excludeGroupIds>de.stem, de.stem.plugins, org.yaml, org.json, org.eclipse,
                                 org.xerial, org.slf4j, com.google.*, com.google, org.codehaus.mojo,
                                 org.checkerframework, mysql
                             </excludeGroupIds>
+                            <excludeArtifactIds>openJL, simplyDatabase, simplyLogger, simplyConfiguration, zSocket
+                            </excludeArtifactIds>
                         </configuration>
                     </execution>
                 </executions>
