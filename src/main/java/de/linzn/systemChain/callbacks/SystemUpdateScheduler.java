@@ -15,7 +15,6 @@ import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
 import de.stem.stemSystem.STEMSystemApp;
-import de.stem.stemSystem.modules.notificationModule.NotificationContainer;
 import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
@@ -69,8 +68,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
         if (exitCode != 0) {
             String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
-            NotificationContainer notificationContainer = new NotificationContainer(message, NotificationPriority.HIGH);
-            STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
+            STEMSystemApp.getInstance().getNotificationModule().pushNotification(message, NotificationPriority.HIGH, SystemChainPlugin.systemChainPlugin);
         }
     }
 

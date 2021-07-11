@@ -16,7 +16,6 @@ import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
 import de.stem.stemSystem.STEMSystemApp;
-import de.stem.stemSystem.modules.notificationModule.NotificationContainer;
 import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
@@ -114,11 +113,10 @@ public class TemperatureScheduler extends AbstractCallback {
             }
         }
         if (notificationString != null) {
-            NotificationContainer notificationContainer = new NotificationContainer(notificationString, NotificationPriority.ASAP);
-            STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationContainer);
+            STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationString, NotificationPriority.ASAP, SystemChainPlugin.systemChainPlugin);
         }
 
-        STEMSystemApp.LOGGER.DEBUG("Core temperatures " + floatList.toString());
+        STEMSystemApp.LOGGER.DEBUG("Core temperatures " + floatList);
     }
 
     @Override
