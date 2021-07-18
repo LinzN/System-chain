@@ -14,6 +14,7 @@ package de.linzn.systemChain.callbacks;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
+import de.linzn.systemChain.events.SystemUpdateEvent;
 import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
@@ -65,6 +66,9 @@ public class SystemUpdateScheduler extends AbstractCallback {
         int exitCode = operationOutput.getExit();
         ShellOperation abstractOperation = (ShellOperation) operationOutput.getAbstractOperation();
         STEMSystemApp.LOGGER.INFO("Finish update " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with exit " + exitCode);
+
+        SystemUpdateEvent systemUpdateEvent = new SystemUpdateEvent(exitCode, abstractOperation.getSshHost(), abstractOperation.getSshPort());
+        STEMSystemApp.getInstance().getEventModule().getStemEventBus().fireEvent(systemUpdateEvent);
 
         if (exitCode != 0) {
             String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
