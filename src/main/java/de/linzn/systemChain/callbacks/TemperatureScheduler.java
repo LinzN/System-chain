@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class TemperatureScheduler extends AbstractCallback {
 
     private final FileConfiguration fileConfiguration;
-    private final int[] heat = {70, 80, 90};
+    private final int[] heat = {80, 90, 95};
     private int last = 0;
     private static double hottestCore = 0;
 
