@@ -16,13 +16,16 @@ import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
 import de.linzn.systemChain.events.SystemUpdateEvent;
 import de.stem.stemSystem.STEMSystemApp;
+import de.stem.stemSystem.modules.informationModule.InformationBlock;
 import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
 import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
+import de.stem.stemSystem.utils.JavaUtils;
 
 import java.io.File;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 
@@ -72,7 +75,9 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
         if (exitCode != 0) {
             String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
-            STEMSystemApp.getInstance().getNotificationModule().pushNotification(message, NotificationPriority.HIGH, SystemChainPlugin.systemChainPlugin);
+            InformationBlock informationBlock = new InformationBlock("System-Upgrade", message, SystemChainPlugin.systemChainPlugin);
+            informationBlock.setExpireTime(JavaUtils.getTimeInstant().plus(12, ChronoUnit.HOURS));
+            STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
     }
 

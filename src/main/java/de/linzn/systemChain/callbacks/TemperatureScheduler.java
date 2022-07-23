@@ -16,7 +16,7 @@ import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
 import de.stem.stemSystem.STEMSystemApp;
-import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
+import de.stem.stemSystem.modules.informationModule.InformationBlock;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
@@ -34,6 +34,8 @@ public class TemperatureScheduler extends AbstractCallback {
     private int last = 0;
     private static double hottestCore = 0;
 
+    private InformationBlock oldInformationBlock;
+
 
     public TemperatureScheduler() {
         fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "temperatureScheduler.yml"));
@@ -42,6 +44,7 @@ public class TemperatureScheduler extends AbstractCallback {
         fileConfiguration.get("port", 22);
         fileConfiguration.get("command", "ssh test");
         fileConfiguration.save();
+        this.oldInformationBlock = null;
     }
 
     public static double getHottestCore() {
@@ -77,7 +80,7 @@ public class TemperatureScheduler extends AbstractCallback {
             floatList.add(getFloat(s));
         }
         double hotCore = -1;
-        String notificationString = null;
+        InformationBlock informationBlock = null;
         for (Float aFloatList : floatList) {
             double value = aFloatList;
             if (hotCore < value) {
@@ -91,29 +94,36 @@ public class TemperatureScheduler extends AbstractCallback {
                 if (hotCore >= heat[2]) {
                     if (last < 3) {
                         last = 3;
-                        notificationString = "Die Temperatur des Hostsystems liegt mit " + hotCore + "°C im kritischen Bereich!";
+                        informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Hostsystems liegt mit " + hotCore + "°C im kritischen Bereich!", SystemChainPlugin.systemChainPlugin);
+                        informationBlock.setExpireTime(-1);
                     }
                 } else {
                     if (last < 2) {
                         last = 2;
-                        notificationString = "Die Temperatur des Prozessors ist gefährlich heiß. " + hotCore + "°C";
+                        informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Prozessors ist gefährlich heiß. " + hotCore + "°C", SystemChainPlugin.systemChainPlugin);
+                        informationBlock.setExpireTime(-1);
                     }
                 }
             } else {
                 if (last < 1) {
                     last = 1;
-                    notificationString = "Der Prozessor des Hostsystems ist mit " + hotCore + "°C ungewöhnlich heiß.";
+                    informationBlock = new InformationBlock("System-Temperature", "Der Prozessor des Hostsystems ist mit " + hotCore + "°C ungewöhnlich heiß.", SystemChainPlugin.systemChainPlugin);
+                    informationBlock.setExpireTime(-1);
                 }
             }
         } else {
 
             if (last > 0) {
                 last = 0;
-                notificationString = "Die Temperatur des Prozessors ist wieder normal. " + hotCore + "°C";
+                informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Prozessors ist wieder normal. " + hotCore + "°C", SystemChainPlugin.systemChainPlugin);
+                informationBlock.setExpireTime(0);
             }
         }
-        if (notificationString != null) {
-            STEMSystemApp.getInstance().getNotificationModule().pushNotification(notificationString, NotificationPriority.ASAP, SystemChainPlugin.systemChainPlugin);
+        if (informationBlock != null) {
+            if (oldInformationBlock != null) {
+                oldInformationBlock.expire();
+            }
+            STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
 
         STEMSystemApp.LOGGER.DEBUG("Core temperatures " + floatList);
