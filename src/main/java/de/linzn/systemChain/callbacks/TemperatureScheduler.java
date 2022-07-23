@@ -123,6 +123,7 @@ public class TemperatureScheduler extends AbstractCallback {
             if (oldInformationBlock != null) {
                 oldInformationBlock.expire();
             }
+            oldInformationBlock = informationBlock;
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
 
