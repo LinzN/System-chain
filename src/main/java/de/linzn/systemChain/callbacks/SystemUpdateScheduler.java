@@ -77,6 +77,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
             String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
             InformationBlock informationBlock = new InformationBlock("System-Upgrade", message, SystemChainPlugin.systemChainPlugin);
             informationBlock.setExpireTime(JavaUtils.getTimeInstant().plus(12, ChronoUnit.HOURS));
+            informationBlock.setIcon("SERVER");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
     }

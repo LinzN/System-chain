@@ -124,6 +124,7 @@ public class TemperatureScheduler extends AbstractCallback {
                 oldInformationBlock.expire();
             }
             oldInformationBlock = informationBlock;
+            informationBlock.setIcon("FIRE");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
 
