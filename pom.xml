@@ -16,8 +16,8 @@
     <name>system-chain</name>
     <repositories>
         <repository>
-            <id>enigmar-repo</id>
-            <url>https://repository.enigmar.de/</url>
+            <id>Stem Builds Repository</id>
+            <url>https://builds.app.stem-system.de/plugin/repository/everything/</url>
         </repository>
     </repositories>
     <build>
@@ -78,13 +78,13 @@
             </plugin>
         </plugins>
     </build>
-    <version>0.0.1</version>
+    <version>1.0-SNAPSHOT</version>
     <artifactId>system-chain</artifactId>
     <dependencies>
         <dependency>
             <groupId>de.stem</groupId>
             <artifactId>stem-system</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <properties>
