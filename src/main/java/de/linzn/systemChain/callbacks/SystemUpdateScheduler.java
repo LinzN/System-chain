@@ -11,6 +11,7 @@
 
 package de.linzn.systemChain.callbacks;
 
+import de.linzn.openJL.converter.TimeAdapter;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
@@ -76,7 +77,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
         if (exitCode != 0) {
             String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
             InformationBlock informationBlock = new InformationBlock("System-Upgrade", message, SystemChainPlugin.systemChainPlugin);
-            informationBlock.setExpireTime(JavaUtils.getTimeInstant().plus(12, ChronoUnit.HOURS));
+            informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
             informationBlock.setIcon("SERVER");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
