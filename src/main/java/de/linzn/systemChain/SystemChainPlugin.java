@@ -30,12 +30,19 @@ public class SystemChainPlugin extends STEMPlugin {
     @Override
     public void onEnable() {
         systemChainPlugin = this;
-        temperatureScheduler = new TemperatureScheduler();
-        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(temperatureScheduler, this);
-        networkScheduler = new NetworkScheduler();
-        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(networkScheduler, this);
-        systemUpdateScheduler = new SystemUpdateScheduler();
-        STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(systemUpdateScheduler, this);
+        if(this.getDefaultConfig().getBoolean("module.temperature", true)) {
+            temperatureScheduler = new TemperatureScheduler();
+            STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(temperatureScheduler, this);
+        }
+        if(this.getDefaultConfig().getBoolean("module.network", true)) {
+            networkScheduler = new NetworkScheduler();
+            STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(networkScheduler, this);
+        }
+        if(this.getDefaultConfig().getBoolean("module.update", true)) {
+            systemUpdateScheduler = new SystemUpdateScheduler();
+            STEMSystemApp.getInstance().getCallBackService().registerCallbackListener(systemUpdateScheduler, this);
+        }
+        this.getDefaultConfig().save();
     }
 
     @Override
