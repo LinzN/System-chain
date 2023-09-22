@@ -11,6 +11,7 @@
 
 package de.linzn.systemChain.callbacks;
 
+import de.linzn.gptFramework.GPTFrameworkPlugin;
 import de.linzn.openJL.converter.TimeAdapter;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
@@ -18,12 +19,11 @@ import de.linzn.systemChain.SystemChainPlugin;
 import de.linzn.systemChain.events.SystemUpdateEvent;
 import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.modules.informationModule.InformationBlock;
-import de.stem.stemSystem.modules.notificationModule.NotificationPriority;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
 import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
-import de.stem.stemSystem.utils.JavaUtils;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.time.temporal.ChronoUnit;
@@ -75,8 +75,9 @@ public class SystemUpdateScheduler extends AbstractCallback {
         STEMSystemApp.getInstance().getEventModule().getStemEventBus().fireEvent(systemUpdateEvent);
 
         if (exitCode != 0) {
-            String message = "Error (Code: " + exitCode + ") while upgrading machine " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + "!";
-            InformationBlock informationBlock = new InformationBlock("System-Upgrade", message, SystemChainPlugin.systemChainPlugin);
+            String error = "Server upgrade failed for " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with errorcode " + exitCode;
+            JSONObject response = GPTFrameworkPlugin.gptFrameworkPlugin.getGptManager().createAIEventCompletion().requestEventResponse(error);
+            InformationBlock informationBlock = new InformationBlock("System-Upgrade", response.getString("output"), SystemChainPlugin.systemChainPlugin);
             informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
             informationBlock.setIcon("SERVER");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
