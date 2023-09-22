@@ -11,7 +11,6 @@
 
 package de.linzn.systemChain.callbacks;
 
-import de.linzn.gptFramework.GPTFrameworkPlugin;
 import de.linzn.openJL.converter.TimeAdapter;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
@@ -76,8 +75,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
         if (exitCode != 0) {
             String error = "Server upgrade failed for " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with errorcode " + exitCode;
-            JSONObject response = GPTFrameworkPlugin.gptFrameworkPlugin.getGptManager().createAIEventCompletion().requestEventResponse(error);
-            InformationBlock informationBlock = new InformationBlock("System-Upgrade", response.getString("output"), SystemChainPlugin.systemChainPlugin);
+            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin, true);
             informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
             informationBlock.setIcon("SERVER");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
