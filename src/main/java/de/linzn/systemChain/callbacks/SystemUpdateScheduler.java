@@ -74,8 +74,8 @@ public class SystemUpdateScheduler extends AbstractCallback {
         STEMSystemApp.getInstance().getEventModule().getStemEventBus().fireEvent(systemUpdateEvent);
 
         if (exitCode != 0) {
-            String error = "Server upgrade failed for " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with errorcode " + exitCode;
-            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin, true);
+            String error = "Server upgrade failed for server " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with error code: " + exitCode;
+            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin);
             informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
             informationBlock.setIcon("SERVER");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
