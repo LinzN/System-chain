@@ -18,6 +18,7 @@ import de.linzn.systemChain.SystemChainPlugin;
 import de.linzn.systemChain.events.SystemUpdateEvent;
 import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.modules.informationModule.InformationBlock;
+import de.stem.stemSystem.modules.informationModule.InformationIntent;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
@@ -77,6 +78,8 @@ public class SystemUpdateScheduler extends AbstractCallback {
             String error = "Server upgrade failed for server " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with error code: " + exitCode;
             InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin);
             informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
+            informationBlock.addIntent(InformationIntent.NOTIFY_USER);
+            informationBlock.addIntent(InformationIntent.SHOW_DISPLAY);
             informationBlock.setIcon("SERVER");
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }

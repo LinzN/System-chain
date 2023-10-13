@@ -17,6 +17,7 @@ import de.linzn.simplyConfiguration.provider.YamlConfiguration;
 import de.linzn.systemChain.SystemChainPlugin;
 import de.stem.stemSystem.STEMSystemApp;
 import de.stem.stemSystem.modules.informationModule.InformationBlock;
+import de.stem.stemSystem.modules.informationModule.InformationIntent;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
@@ -125,6 +126,8 @@ public class TemperatureScheduler extends AbstractCallback {
             }
             oldInformationBlock = informationBlock;
             informationBlock.setIcon("FIRE");
+            informationBlock.addIntent(InformationIntent.SHOW_DISPLAY);
+            informationBlock.addIntent(InformationIntent.NOTIFY_USER);
             STEMSystemApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
         }
 
