@@ -76,7 +76,7 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
         if (exitCode != 0) {
             String error = "Server upgrade failed for server " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with error code: " + exitCode;
-            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin);
+            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin, error);
             informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
             informationBlock.addIntent(InformationIntent.NOTIFY_USER);
             informationBlock.addIntent(InformationIntent.SHOW_DISPLAY);
