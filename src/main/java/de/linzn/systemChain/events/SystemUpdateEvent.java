@@ -13,26 +13,5 @@ package de.linzn.systemChain.events;
 
 import de.stem.stemSystem.modules.eventModule.StemEvent;
 
-public class SystemUpdateEvent implements StemEvent {
-    private final int exitCode;
-    private final String hostname;
-    private final int port;
-
-    public SystemUpdateEvent(int exitCode, String hostname, int port) {
-        this.exitCode = exitCode;
-        this.hostname = hostname;
-        this.port = port;
-    }
-
-    public int getExitCode() {
-        return exitCode;
-    }
-
-    public String getHostname() {
-        return hostname;
-    }
-
-    public int getPort() {
-        return port;
-    }
+public record SystemUpdateEvent(int exitCode, String hostname, int port) implements StemEvent {
 }

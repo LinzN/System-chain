@@ -22,8 +22,7 @@ import de.stem.stemSystem.modules.informationModule.InformationIntent;
 import de.stem.stemSystem.taskManagment.AbstractCallback;
 import de.stem.stemSystem.taskManagment.CallbackTime;
 import de.stem.stemSystem.taskManagment.operations.OperationOutput;
-import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
-import org.json.JSONObject;
+import de.stem.stemSystem.taskManagment.operations.defaultOperations.ScriptOperation;
 
 import java.io.File;
 import java.time.temporal.ChronoUnit;
@@ -35,7 +34,6 @@ public class SystemUpdateScheduler extends AbstractCallback {
 
     public SystemUpdateScheduler() {
         fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "systemUpdateScheduler.yml"));
-        fileConfiguration.get("command", "test123");
         fileConfiguration.save();
     }
 
@@ -44,38 +42,34 @@ public class SystemUpdateScheduler extends AbstractCallback {
     public void operation() {
         HashMap<String, Object> systems = (HashMap<String, Object>) fileConfiguration.get("systems");
 
-        String command = fileConfiguration.getString("command");
-
         for (String key : systems.keySet()) {
 
             String hostname = fileConfiguration.getString("systems." + key + ".hostname");
             int port = fileConfiguration.getInt("systems." + key + ".port");
+
             STEMSystemApp.LOGGER.INFO("Update " + hostname + ":" + port);
-            ShellOperation shellOperation = new ShellOperation();
+            ScriptOperation scriptOperation = new ScriptOperation("update_linux-system");
 
-            shellOperation.setUseSSH(true);
-            shellOperation.setSshUser("root");
-            shellOperation.setSshHost(hostname);
-            shellOperation.setSshPort(port);
-
-            shellOperation.setScriptCommand(command);
-            shellOperation.setUseOutput(false);
-
-            addOperationData(shellOperation);
+            scriptOperation.addParameter("remotehost", hostname);
+            scriptOperation.addParameter("remoteport", String.valueOf(port));
+            addOperationData(scriptOperation);
         }
     }
 
     @Override
     public void callback(OperationOutput operationOutput) {
         int exitCode = operationOutput.getExit();
-        ShellOperation abstractOperation = (ShellOperation) operationOutput.getAbstractOperation();
-        STEMSystemApp.LOGGER.INFO("Finish update " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with exit " + exitCode);
+        ScriptOperation abstractOperation = (ScriptOperation) operationOutput.getAbstractOperation();
+        String hostname = abstractOperation.getParameterValue("remotehost");
+        int port = Integer.parseInt(abstractOperation.getParameterValue("remoteport"));
 
-        SystemUpdateEvent systemUpdateEvent = new SystemUpdateEvent(exitCode, abstractOperation.getSshHost(), abstractOperation.getSshPort());
+        STEMSystemApp.LOGGER.INFO("Finish update " + hostname + ":" + port + " with exit " + exitCode);
+
+        SystemUpdateEvent systemUpdateEvent = new SystemUpdateEvent(exitCode, hostname, port);
         STEMSystemApp.getInstance().getEventModule().getStemEventBus().fireEvent(systemUpdateEvent);
 
         if (exitCode != 0) {
-            String error = "Server upgrade failed for server " + abstractOperation.getSshHost() + ":" + abstractOperation.getSshPort() + " with error code: " + exitCode;
+            String error = "Server upgrade failed for server " + hostname + ":" + port + " with error code: " + exitCode;
             InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin, error);
             informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
             informationBlock.addIntent(InformationIntent.NOTIFY_USER);
