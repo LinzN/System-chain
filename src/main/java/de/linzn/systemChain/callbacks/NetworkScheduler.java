@@ -1,12 +1,13 @@
 /*
- * Copyright (C) 2020. Niklas Linz - All Rights Reserved
- * You may use, distribute and modify this code under the
- * terms of the LGPLv3 license, which unfortunately won't be
- * written for another century.
+ * Copyright (c) 2025 MirraNET, Niklas Linz. All rights reserved.
  *
- * You should have received a copy of the LGPLv3 license with
- * this file. If not, please write to: niklas.linz@enigmar.de
+ * This file is part of the MirraNET project and is licensed under the
+ * GNU Lesser General Public License v3.0 (LGPLv3).
  *
+ * You may use, distribute and modify this code under the terms
+ * of the LGPLv3 license. You should have received a copy of the
+ * license along with this file. If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>
+ * or contact: niklas.linz@mirranet.de
  */
 
 package de.linzn.systemChain.callbacks;
@@ -14,12 +15,13 @@ package de.linzn.systemChain.callbacks;
 
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
+import de.linzn.stem.STEMApp;
+import de.linzn.stem.taskManagment.AbstractCallback;
+import de.linzn.stem.taskManagment.CallbackTime;
+import de.linzn.stem.taskManagment.operations.OperationOutput;
+import de.linzn.stem.taskManagment.operations.defaultOperations.ShellOperation;
 import de.linzn.systemChain.SystemChainPlugin;
-import de.stem.stemSystem.STEMSystemApp;
-import de.stem.stemSystem.taskManagment.AbstractCallback;
-import de.stem.stemSystem.taskManagment.CallbackTime;
-import de.stem.stemSystem.taskManagment.operations.OperationOutput;
-import de.stem.stemSystem.taskManagment.operations.defaultOperations.ShellOperation;
+
 
 import java.io.File;
 import java.util.List;
@@ -74,7 +76,7 @@ public class NetworkScheduler extends AbstractCallback {
             String[] pingArray = line.split("/");
 
             lastPing = getFloat(pingArray[1]);
-            STEMSystemApp.LOGGER.DEBUG("Network state " + lastPing + " ms");
+            STEMApp.LOGGER.DEBUG("Network state " + lastPing + " ms");
         }
 
     }
