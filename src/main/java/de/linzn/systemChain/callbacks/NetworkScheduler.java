@@ -10,18 +10,16 @@
  * or contact: niklas.linz@mirranet.de
  */
 
-package de.linzn.systemChain.callbacks;
 
+package de.linzn.systemChain.callbacks;
 
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
-import de.linzn.stem.STEMApp;
 import de.linzn.stem.taskManagment.AbstractCallback;
 import de.linzn.stem.taskManagment.CallbackTime;
 import de.linzn.stem.taskManagment.operations.OperationOutput;
 import de.linzn.stem.taskManagment.operations.defaultOperations.ShellOperation;
 import de.linzn.systemChain.SystemChainPlugin;
-
 
 import java.io.File;
 import java.util.List;
@@ -29,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 public class NetworkScheduler extends AbstractCallback {
 
-    private static float lastPing = -1;
+    private static volatile float lastPing = -1;
     private final FileConfiguration fileConfiguration;
 
     public NetworkScheduler() {
@@ -45,48 +43,53 @@ public class NetworkScheduler extends AbstractCallback {
         return lastPing;
     }
 
+    /**
+     * Parse the average round trip time from the ping summary line,
+     * e.g. "rtt min/avg/max/mdev = 1.234/2.345/3.456/0.123 ms".
+     *
+     * @return average in ms or -1 if the line can not be parsed
+     */
+    static float parseAveragePing(String line) {
+        if (line == null) {
+            return -1;
+        }
+        int equals = line.indexOf('=');
+        String values = (equals >= 0 ? line.substring(equals + 1) : line).replace("ms", "").trim();
+        String[] parts = values.split("/");
+        if (parts.length < 2) {
+            return -1;
+        }
+        try {
+            return Float.parseFloat(parts[1].replaceAll("[^\\d.]", ""));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     @Override
     public void operation() {
-        String command = fileConfiguration.getString("command");
-        String username = fileConfiguration.getString("username");
-        String hostname = fileConfiguration.getString("hostname");
-        int port = fileConfiguration.getInt("port");
-
         ShellOperation shellOperation = new ShellOperation();
-
         shellOperation.setUseSSH(true);
-        shellOperation.setSshUser(username);
-        shellOperation.setSshHost(hostname);
-        shellOperation.setSshPort(port);
-
-        shellOperation.setScriptCommand(command);
+        shellOperation.setSshUser(fileConfiguration.getString("username"));
+        shellOperation.setSshHost(fileConfiguration.getString("hostname"));
+        shellOperation.setSshPort(fileConfiguration.getInt("port"));
+        shellOperation.setScriptCommand(fileConfiguration.getString("command"));
         shellOperation.setUseOutput(true);
-
         addOperationData(shellOperation);
     }
 
     @Override
     public void callback(OperationOutput operationOutput) {
-        List<String> list = (List<String>) operationOutput.getData();
-
-        if (operationOutput.getExit() != 0) {
+        if (operationOutput.getExit() != 0 || !(operationOutput.getData() instanceof List<?> list) || list.isEmpty()) {
             lastPing = -1;
-        } else {
-            String line = list.get(0).substring(21).replace("ms", "");
-            String[] pingArray = line.split("/");
-
-            lastPing = getFloat(pingArray[1]);
-            STEMApp.LOGGER.DEBUG("Network state " + lastPing + " ms");
+            return;
         }
-
+        lastPing = parseAveragePing(String.valueOf(list.get(0)));
+        SystemChainPlugin.systemChainPlugin.getPluginLogger().debug("Network state " + lastPing + " ms");
     }
 
     @Override
     public CallbackTime getTime() {
         return new CallbackTime(5, 10, TimeUnit.SECONDS);
-    }
-
-    private float getFloat(String line) {
-        return Float.valueOf(line.replaceAll("[^\\d.]", ""));
     }
 }

@@ -10,12 +10,11 @@
  * or contact: niklas.linz@mirranet.de
  */
 
+
 package de.linzn.systemChain.callbacks;
 
-import de.linzn.openJL.converter.TimeAdapter;
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
-import de.linzn.stem.STEMApp;
 import de.linzn.stem.modules.informationModule.InformationBlock;
 import de.linzn.stem.modules.informationModule.InformationIntent;
 import de.linzn.stem.taskManagment.AbstractCallback;
@@ -25,13 +24,13 @@ import de.linzn.stem.taskManagment.operations.defaultOperations.ScriptOperation;
 import de.linzn.systemChain.SystemChainPlugin;
 import de.linzn.systemChain.events.SystemUpdateEvent;
 
-
 import java.io.File;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-
+import java.util.Map;
 
 public class SystemUpdateScheduler extends AbstractCallback {
+
     private final FileConfiguration fileConfiguration;
 
     public SystemUpdateScheduler() {
@@ -39,19 +38,22 @@ public class SystemUpdateScheduler extends AbstractCallback {
         fileConfiguration.save();
     }
 
-
     @Override
     public void operation() {
-        HashMap<String, Object> systems = (HashMap<String, Object>) fileConfiguration.get("systems");
-
-        for (String key : systems.keySet()) {
-
+        if (!(fileConfiguration.get("systems") instanceof Map<?, ?> systems)) {
+            SystemChainPlugin.systemChainPlugin.getPluginLogger().warning("No systems configured in systemUpdateScheduler.yml");
+            return;
+        }
+        for (Object keyObject : systems.keySet()) {
+            String key = String.valueOf(keyObject);
             String hostname = fileConfiguration.getString("systems." + key + ".hostname");
             int port = fileConfiguration.getInt("systems." + key + ".port");
-
-            STEMApp.LOGGER.INFO("Update " + hostname + ":" + port);
+            if (hostname == null || hostname.isBlank()) {
+                SystemChainPlugin.systemChainPlugin.getPluginLogger().warning("System " + key + " has no hostname");
+                continue;
+            }
+            SystemChainPlugin.systemChainPlugin.getPluginLogger().info("Update " + hostname + ":" + port);
             ScriptOperation scriptOperation = new ScriptOperation("update_linux-system");
-
             scriptOperation.addParameter("remotehost", hostname);
             scriptOperation.addParameter("remoteport", String.valueOf(port));
             addOperationData(scriptOperation);
@@ -65,19 +67,18 @@ public class SystemUpdateScheduler extends AbstractCallback {
         String hostname = abstractOperation.getParameterValue("remotehost");
         int port = Integer.parseInt(abstractOperation.getParameterValue("remoteport"));
 
-        STEMApp.LOGGER.INFO("Finish update " + hostname + ":" + port + " with exit " + exitCode);
-
-        SystemUpdateEvent systemUpdateEvent = new SystemUpdateEvent(exitCode, hostname, port);
-        STEMApp.getInstance().getEventModule().getStemEventBus().fireEvent(systemUpdateEvent);
+        SystemChainPlugin plugin = SystemChainPlugin.systemChainPlugin;
+        plugin.getPluginLogger().info("Finish update " + hostname + ":" + port + " with exit " + exitCode);
+        plugin.getStemApi().events().fire(new SystemUpdateEvent(exitCode, hostname, port));
 
         if (exitCode != 0) {
             String error = "Server upgrade failed for server " + hostname + ":" + port + " with error code: " + exitCode;
-            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, SystemChainPlugin.systemChainPlugin, error);
-            informationBlock.setExpireTime(TimeAdapter.getTimeInstant().plus(12, ChronoUnit.HOURS));
+            InformationBlock informationBlock = new InformationBlock("System-Upgrade", error, plugin, error);
+            informationBlock.setExpireTime(Instant.now().plus(12, ChronoUnit.HOURS));
             informationBlock.addIntent(InformationIntent.NOTIFY_USER);
             informationBlock.addIntent(InformationIntent.SHOW_DISPLAY);
             informationBlock.setIcon("SERVER");
-            STEMApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
+            plugin.getStemApi().information().queue(informationBlock);
         }
     }
 

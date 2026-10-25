@@ -10,12 +10,11 @@
  * or contact: niklas.linz@mirranet.de
  */
 
-package de.linzn.systemChain.callbacks;
 
+package de.linzn.systemChain.callbacks;
 
 import de.linzn.simplyConfiguration.FileConfiguration;
 import de.linzn.simplyConfiguration.provider.YamlConfiguration;
-import de.linzn.stem.STEMApp;
 import de.linzn.stem.modules.informationModule.InformationBlock;
 import de.linzn.stem.modules.informationModule.InformationIntent;
 import de.linzn.stem.taskManagment.AbstractCallback;
@@ -24,7 +23,6 @@ import de.linzn.stem.taskManagment.operations.OperationOutput;
 import de.linzn.stem.taskManagment.operations.defaultOperations.ShellOperation;
 import de.linzn.systemChain.SystemChainPlugin;
 
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,13 +30,11 @@ import java.util.concurrent.TimeUnit;
 
 public class TemperatureScheduler extends AbstractCallback {
 
+    private static volatile double hottestCore = 0;
     private final FileConfiguration fileConfiguration;
     private final int[] heat = {95, 98, 100};
     private int last = 0;
-    private static double hottestCore = 0;
-
     private InformationBlock oldInformationBlock;
-
 
     public TemperatureScheduler() {
         fileConfiguration = YamlConfiguration.loadConfiguration(new File(SystemChainPlugin.systemChainPlugin.getDataFolder(), "temperatureScheduler.yml"));
@@ -54,74 +50,79 @@ public class TemperatureScheduler extends AbstractCallback {
         return hottestCore;
     }
 
+    private static Float parseTemperature(String line) {
+        String number = line == null ? "" : line.replaceAll("[^\\d.]", "");
+        if (number.isEmpty()) {
+            return null;
+        }
+        try {
+            return Float.parseFloat(number);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 
     @Override
     public void operation() {
-        String command = fileConfiguration.getString("command");
-        String username = fileConfiguration.getString("username");
-        String hostname = fileConfiguration.getString("hostname");
-        int port = fileConfiguration.getInt("port");
-
         ShellOperation shellOperation = new ShellOperation();
-
         shellOperation.setUseSSH(true);
-        shellOperation.setSshUser(username);
-        shellOperation.setSshHost(hostname);
-        shellOperation.setSshPort(port);
-
-        shellOperation.setScriptCommand(command);
+        shellOperation.setSshUser(fileConfiguration.getString("username"));
+        shellOperation.setSshHost(fileConfiguration.getString("hostname"));
+        shellOperation.setSshPort(fileConfiguration.getInt("port"));
+        shellOperation.setScriptCommand(fileConfiguration.getString("command"));
         shellOperation.setUseOutput(true);
-
         addOperationData(shellOperation);
     }
 
     @Override
-    public void callback(OperationOutput operationOutput) {
-        List<String> list = (List<String>) operationOutput.getData();
-        ArrayList<Float> floatList = new ArrayList<>();
-        for (String s : list) {
-            floatList.add(getFloat(s));
+    public synchronized void callback(OperationOutput operationOutput) {
+        if (operationOutput.getExit() != 0 || !(operationOutput.getData() instanceof List<?> list)) {
+            SystemChainPlugin.systemChainPlugin.getPluginLogger().debug("Temperature query failed with exit " + operationOutput.getExit());
+            return;
         }
-        double hotCore = -1;
-        InformationBlock informationBlock = null;
-        for (Float aFloatList : floatList) {
-            double value = aFloatList;
-            if (hotCore < value) {
-                hotCore = value;
+        List<Float> floatList = new ArrayList<>();
+        for (Object line : list) {
+            Float value = parseTemperature(String.valueOf(line));
+            if (value != null) {
+                floatList.add(value);
             }
+        }
+        if (floatList.isEmpty()) {
+            return;
+        }
+
+        double hotCore = -1;
+        for (Float value : floatList) {
+            hotCore = Math.max(hotCore, value);
         }
         hottestCore = hotCore;
-        if (hotCore >= heat[0]) {
 
-            if (hotCore >= heat[1]) {
-                if (hotCore >= heat[2]) {
-                    if (last < 3) {
-                        last = 3;
-                        informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Hostsystems liegt mit " + hotCore + "°C im kritischen Bereich!", SystemChainPlugin.systemChainPlugin);
-                        informationBlock.setExpireTime(-1);
-                    }
-                } else {
-                    if (last < 2) {
-                        last = 2;
-                        informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Prozessors ist gefährlich heiß. " + hotCore + "°C", SystemChainPlugin.systemChainPlugin);
-                        informationBlock.setExpireTime(-1);
-                    }
-                }
-            } else {
-                if (last < 1) {
-                    last = 1;
-                    informationBlock = new InformationBlock("System-Temperature", "Der Prozessor des Hostsystems ist mit " + hotCore + "°C ungewöhnlich heiß.", SystemChainPlugin.systemChainPlugin);
-                    informationBlock.setExpireTime(-1);
-                }
+        InformationBlock informationBlock = null;
+        SystemChainPlugin plugin = SystemChainPlugin.systemChainPlugin;
+        if (hotCore >= heat[2]) {
+            if (last < 3) {
+                last = 3;
+                informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Hostsystems liegt mit " + hotCore + "°C im kritischen Bereich!", plugin);
+                informationBlock.setExpireTime(-1);
             }
-        } else {
-
-            if (last > 0) {
-                last = 0;
-                informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Prozessors ist wieder normal. " + hotCore + "°C", SystemChainPlugin.systemChainPlugin);
-                informationBlock.setExpireTime(0);
+        } else if (hotCore >= heat[1]) {
+            if (last < 2) {
+                last = 2;
+                informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Prozessors ist gefährlich heiß. " + hotCore + "°C", plugin);
+                informationBlock.setExpireTime(-1);
             }
+        } else if (hotCore >= heat[0]) {
+            if (last < 1) {
+                last = 1;
+                informationBlock = new InformationBlock("System-Temperature", "Der Prozessor des Hostsystems ist mit " + hotCore + "°C ungewöhnlich heiß.", plugin);
+                informationBlock.setExpireTime(-1);
+            }
+        } else if (last > 0) {
+            last = 0;
+            informationBlock = new InformationBlock("System-Temperature", "Die Temperatur des Prozessors ist wieder normal. " + hotCore + "°C", plugin);
+            informationBlock.setExpireTime(0);
         }
+
         if (informationBlock != null) {
             if (oldInformationBlock != null) {
                 oldInformationBlock.expire();
@@ -130,20 +131,13 @@ public class TemperatureScheduler extends AbstractCallback {
             informationBlock.setIcon("FIRE");
             informationBlock.addIntent(InformationIntent.SHOW_DISPLAY);
             informationBlock.addIntent(InformationIntent.NOTIFY_USER);
-            STEMApp.getInstance().getInformationModule().queueInformationBlock(informationBlock);
+            plugin.getStemApi().information().queue(informationBlock);
         }
-
-        STEMApp.LOGGER.DEBUG("Core temperatures " + floatList);
+        plugin.getPluginLogger().debug("Core temperatures " + floatList);
     }
 
     @Override
     public CallbackTime getTime() {
         return new CallbackTime(10, 20, TimeUnit.SECONDS);
     }
-
-
-    private float getFloat(String line) {
-        return Float.valueOf(line.replaceAll("[^\\d.]", ""));
-    }
-
 }
